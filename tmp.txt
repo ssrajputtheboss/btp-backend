@@ -1,0 +1,9 @@
+ffmpeg -i the_flash_360p.mp4 -q:a 0 -map a the_flash_360p.mp3
+ac1a975f-65bf-4068-8b6e-1d0663bf499f
+ from pydub import AudioSegment
+sound = AudioSegment.from_mp3("/the_flash_360p.mp3")
+extract.export("/" , format = ".mp3")
+
+
+#merge:
+ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
