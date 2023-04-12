@@ -9,14 +9,15 @@ import os
 import cv2
 from pydub import AudioSegment
 import tracemalloc as tm
+PROJECT_DIR = 'C:\\Users\\shash\\Desktop\\btp\\backend'
 
 def load_models():
     global c,loaded_model,model
     c = CA_SUM()
-    loaded_model = torch.load('C:\\Users\\shash\\Desktop\\btp\\main\\trained_model_state\\SumMe_output.pt')
+    loaded_model = torch.load(f'{PROJECT_DIR}\\models\\SumMe_output.pt') # can replace with TVSum_output.pt
     c.load_state_dict(loaded_model)
     c.eval()
-    PATH = 'C:\\Users\\shash\\Desktop\\btp\\main\\trained_model_state\\googlenet-feature-extractor.pt'
+    PATH = f'{PROJECT_DIR}\\models\\googlenet-feature-extractor.pt'
     model = torch.load(PATH)
     model.eval()
     set_models(c,loaded_model,model)
@@ -25,7 +26,7 @@ def generate_summary(id,file_name,summary_percentage=10):
     '''if logger.active:
         tm.start()'''
     logger.log((file_name,id,summary_percentage))
-    base_path = 'C:\\Users\\shash\\Desktop\\btp\\backend\\static'
+    base_path = f'{PROJECT_DIR}\\static'
     base_name = file_name.strip(".mp4")
     video_path = f'{base_path}\\uploads\\{id}\\{file_name}'
     audio_path = f'{base_path}\\uploads\\{id}\\{base_name + ".mp3"}'
