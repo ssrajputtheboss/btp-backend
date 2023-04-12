@@ -300,31 +300,39 @@ def eval_cost(k, cps, score, vmax):
     return score/float(n) + penalty
 
 
-def get_frames(filename, n_frames=-1):
-    frames = []
-    actual_frames = []
+def create_video_using_selected_frames(filename, selected, shots_ids, size, save_path, n_frames=-1):
     v_cap = cv2.VideoCapture(filename)
     v_len = int(v_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_rate = v_cap.get(cv2.CAP_PROP_FPS)
+    out = cv2.VideoWriter(save_path, 0, frame_rate, size)
     if n_frames == -1:
         n_frames = v_len
     else:
         n_frames = min(n_frames, v_len)
 
     frame_list = np.linspace(0, v_len-1, n_frames+1, dtype=np.int16)
+    slp = 0  # selected pointer
+    sp = 0  # shot pointer
     for fn in range(v_len):
         success, frame = v_cap.read()
         if success is False:
             continue
-        if (fn in frame_list):
-            actual_frames.append(frame)
+        sp = selected[slp]
+        if fn == shots_ids[sp][1]:
+            slp += 1
+        if (fn in frame_list) and (fn >= shots_ids[sp][0] and fn < shots_ids[sp][1]):
+            out.write(frame)
+            del frame
             # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # frames.append(frame)
+    out.release()
     v_cap.release()
-    return frames, v_len, actual_frames
+    return
 
 
-def get_frames_with_sound(filename, n_frames=-1):
+def get_frames_features_with_sound(filename, n_frames=-1):
     actual_frames = []
+    frame_shape = 0, 0, 0
     v_cap = cv2.VideoCapture(filename)
     v_len = int(v_cap.get(cv2.CAP_PROP_FRAME_COUNT))
     if n_frames == -1:
@@ -333,19 +341,27 @@ def get_frames_with_sound(filename, n_frames=-1):
         n_frames = min(n_frames, v_len)
     audio_index = [0]
     frame_list = np.linspace(0, v_len-1, n_frames+1, dtype=np.int16)
+    features = []
     for fn in range(v_len):
         success, frame = v_cap.read()
         if success is False:
             continue
+        if fn == 0:
+            frame_shape = frame.shape
         if (fn in frame_list):
-            actual_frames.append(frame)
+            # actual_frames.append(frame)
             cur_time = int(v_cap.get(cv2.CAP_PROP_POS_MSEC))
             audio_index.append(cur_time)
+            im = Image.fromarray(frame)
+            frame_feature = extractFeatures(im)
+            del im
+            features.append(frame_feature)
+            del frame
             # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # frames.append(frame)
     v_cap.release()
     cv2.destroyAllWindows()
-    return actual_frames, audio_index
+    return features, audio_index, frame_shape
 
 
 def get_frames_videogear(video_path):
